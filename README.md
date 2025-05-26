@@ -1,7 +1,7 @@
 <h1 align="center">👋 Hello, I'm DENBOBA Abdulkadir Gobena</h1>
 
 <p align="center">
-🎓 Computer Science Student at <a href="https://www.international.upb.ro/" target="_blank">National University of Science and Technology POLITEHNICA Bucharest</a> <br>
+🎓 Computer Science Student at <b> from Bucharest</b> <br>
 🛠 Passionate about systems programming, embedded development, AI, and building scalable software.
 </p>
 
