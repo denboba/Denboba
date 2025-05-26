@@ -26,23 +26,6 @@
 
 ---
 
-### 🔍 Featured Projects
-
-<div align="center">
-  
-| Project | Description |
-|--------|-------------|
-| [📱 WhatsApp Clone](https://github.com/denboba/flutter_whatsapp_clone) | Responsive UI clone using Flutter and Dart |
-| [🐚 Mini Shell](https://github.com/denboba/mini_shell-in-c) | A custom Unix shell in C |
-| [🔀 Parallel Graph](https://github.com/denboba/Parallel-Graph) | Graph algorithms with parallelism |
-| [🤖 Sokoban AI](https://github.com/denboba/sokoban_AI) | AI bot solving Sokoban with search |
-| [🌐 Web Server](https://github.com/denboba/web_server) | Multithreaded Python HTTP server |
-| [🚀 Hackitall 2024](https://github.com/denboba/Hackitall2024) | Smart embedded hackathon project |
-
-</div>
-
----
-
 ### 📊 GitHub Stats
 
 <div align="center">
