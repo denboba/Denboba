@@ -44,7 +44,7 @@ Here are some of the cool things I’ve built:
 ## 🤝 Let's Connect
 
 - 💼 [LinkedIn](https://linkedin.com/in/denboba)  
-- 📫 Email: [adenboba@stud.fils.upb.ro](mailto:adenboba@stud.fils.upb.ro)  
+- 📫 Email: [email](mailto:adenboba@stud.fils.upb.ro)  
 - 🌐 Website/Portfolio: *(coming soon)*  
 
 ---
