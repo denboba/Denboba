@@ -4,7 +4,6 @@
 🎓 Computer Science Student at <b> from Bucharest</b> <br>
 🛠 Passionate about systems programming, embedded development, AI, and building scalable software.
 </p>
-
 ---
 
 ### 🛠️ Tech Stack
