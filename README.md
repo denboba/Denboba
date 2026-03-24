@@ -1,8 +1,8 @@
 <h1 align="center">👋 Hello, I'm DENBOBA Abdulkadir Gobena</h1>
 
 <p align="center">
-🎓 Computer Science Student at <b> from Bucharest</b> <br>
-🛠 Passionate about systems programming, embedded development, AI, and building scalable software.
+🎓 Computer Science Student from <b> Bucharest</b> <br>
+🛠 Passionate about systems programming, embedded development, AI & ML, and building scalable software.
 </p>
 
 ---
