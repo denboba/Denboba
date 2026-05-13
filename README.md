@@ -7,7 +7,6 @@
 
 <p align="center">
   <a href="https://ro.linkedin.com/in/abdulkadir-gobena-denboba-0b1534252">LinkedIn</a> &nbsp;·&nbsp;
-  <a href="https://portifolio-4hp6.vercel.app/">Portfolio</a> &nbsp;·&nbsp;
   <a href="https://barruu.com">barruu.com</a> &nbsp;·&nbsp;
   <a href="https://play.google.com/store/apps/details?id=com.bitpyrus.barruu">Play Store</a> &nbsp;·&nbsp;
   <a href="mailto:adenboba@stud.fils.upb.ro">Email</a>
@@ -37,7 +36,7 @@
 
 ### Currently working on
 
-- Shipping new features for [Barruu](https://barruu.com) based on real user feedback
+- Shipping new features for [Barruu](https://barruu.com)
 - Deepening knowledge of Clean Architecture and BLoC in Flutter
 - Final year of B.Sc. Computer Science @ Politehnica University of Bucharest
 
