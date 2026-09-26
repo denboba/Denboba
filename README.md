@@ -1,7 +1,7 @@
 <h1 align="center">Abdulkadir Gobena Denboba</h1>
 
 <p align="center">
-  Flutter Mobile Developer &nbsp;·&nbsp; CS Student @ UPB Bucharest, graduated 2026<br/>
+  Flutter Mobile Developer &nbsp;·&nbsp; Computer Engineering Graduate, UPB Bucharest (2026)<br/>
   Building <a href="https://barruu.com"><strong>Barruu</strong></a> — a live Flutter platform for interactive content creation
 </p>
 
@@ -38,7 +38,7 @@
 
 - Shipping new features for [Barruu](https://barruu.com)
 - Deepening knowledge of Clean Architecture and BLoC in Flutter
-- Final year of B.Sc. Computer Science @ Politehnica University of Bucharest
+- Open to Junior/Graduate Software Engineer, Mobile (Flutter), and Full-Stack roles
 
 ---
 
