@@ -1,0 +1,360 @@
+# Section E roll-forward: every client-, year- and layout-specific choice lives here.
+# The program reads this file and nothing in src/ names a year, a sheet, a cell or a label.
+# Numbers are quoted strings so they are read exactly (Decimal), never as binary floats.
+# Paths in [inputs] are relative to the folder the command is run from (date/).
+
+[report]
+company = "Asigurări Carpați S.A."
+year = 2025
+prior_year = 2024
+section = "E"
+date_text = "31 decembrie {year}"          # how a balance-sheet date is written in the text
+
+[inputs]
+workbook = "registru_2025.xlsx"
+prior_workbook = "registru_2024.xlsx"
+prior_report = "raport_2024.txt"
+prior_mapping = "mapping_2024.toml"
+other_company_report = "raport_Asigurari_Dunarea_2024_extras.txt"   # similarity screen only
+
+[output]
+dir = "../output"
+
+[workbook_layout]
+current_column = "31.12 an curent"
+prior_column = "31.12 an anterior"
+unit_search_rows = 3
+unit_note_prefix = "Valori în"
+# A sheet's "Valori în ..." note gives its unit. Longest phrase wins ("mii lei" before "lei").
+units = [
+  { phrase = "mil. lei", factor = "1000000" },
+  { phrase = "milioane lei", factor = "1000000" },
+  { phrase = "mii lei", factor = "1000" },
+  { phrase = "lei", factor = "1" },
+]
+
+[tolerances]
+sum_lei = "0"            # tier and module sums must agree exactly in the source values
+ratio = "0.0005"         # |workbook ratio - EOF/SCR| (fraction); below display precision
+plausible_min = "0.5"    # current/prior outside [min, max] is treated as a possible unit error
+plausible_max = "2.0"
+similarity_ngram = 6     # words in a row shared with the other insurer's text = copied
+
+# ---------------------------------------------------------------------------------------
+# Facts. kind: amount (lei) | ratio (fraction, from a "%"-formatted cell) | count.
+# source = "workbook": sheet + row label (+ the current/prior column headers above).
+# prior = true: also resolve last year's value (for comparisons only, never as a fallback).
+# prior_mapping = the entry (text, occurrence) of [inputs] prior_mapping this fact continues;
+# last year's value must format to that published text (lineage check).
+# ---------------------------------------------------------------------------------------
+
+[[fact]]
+id = "eof_t1"
+name_ro = "fondurile proprii eligibile de nivel 1"
+kind = "amount"
+sheet = "Capital"
+label = "Fonduri proprii eligibile SCR, nivel 1"
+prior = true
+prior_mapping = { text = "251,3", occurrence = 1 }
+
+[[fact]]
+id = "eof_t2"
+name_ro = "fondurile proprii eligibile de nivel 2"
+kind = "amount"
+sheet = "Capital"
+label = "Fonduri proprii eligibile SCR, nivel 2"
+prior = true
+prior_mapping = { text = "33,3", occurrence = 1 }
+
+[[fact]]
+id = "eof_t3"
+name_ro = "fondurile proprii eligibile de nivel 3"
+kind = "amount"
+sheet = "Capital"
+label = "Fonduri proprii eligibile SCR, nivel 3"
+
+[[fact]]
+id = "eof_total"
+name_ro = "totalul fondurilor proprii eligibile"
+kind = "amount"
+sheet = "Capital"
+label = "Fonduri proprii eligibile SCR, total"
+prior = true
+prior_mapping = { text = "284,6", occurrence = 1 }
+
+[[fact]]
+id = "scr"
+name_ro = "SCR"
+kind = "amount"
+sheet = "Capital"
+label = "SCR"
+prior = true
+prior_mapping = { text = "151,9", occurrence = 1 }
+
+[[fact]]
+id = "mcr"
+name_ro = "MCR"
+kind = "amount"
+sheet = "Capital"
+label = "MCR"
+prior = true
+prior_mapping = { text = "45,6", occurrence = 1 }
+
+[[fact]]
+id = "solvency_ratio"
+name_ro = "rata de solvabilitate"
+kind = "ratio"
+sheet = "Capital"
+label = "Rata de solvabilitate"
+prior = true
+prior_mapping = { text = "187,4", occurrence = 1 }
+computed = { numerator = "eof_total", denominator = "scr" }   # README §2 definition
+
+# SCR components: not printed in section E; used to corroborate the SCR and as the data
+# condition of the causal claim below.
+[[fact]]
+id = "scr_underwriting"
+kind = "amount"
+sheet = "SCR_module"
+label = "Risc de subscriere asigurare generală"
+
+[[fact]]
+id = "scr_market"
+kind = "amount"
+sheet = "SCR_module"
+label = "Risc de piață"
+prior = true
+
+[[fact]]
+id = "scr_counterparty"
+kind = "amount"
+sheet = "SCR_module"
+label = "Risc de contrapartidă"
+
+[[fact]]
+id = "scr_diversification"
+kind = "amount"
+sheet = "SCR_module"
+label = "Efect de diversificare (se scade)"   # 2025 layout: positive value, subtracted
+
+[[fact]]
+id = "scr_basic"
+kind = "amount"
+sheet = "SCR_module"
+label = "SCR de bază"
+
+[[fact]]
+id = "scr_operational"
+kind = "amount"
+sheet = "SCR_module"
+label = "Risc operațional"
+
+[[fact]]
+id = "scr_module_total"
+kind = "amount"
+sheet = "SCR_module"
+label = "SCR"
+
+# Dividends paid in the year: from the audited financial statements, not the workbook.
+[[fact]]
+id = "dividends_paid"
+name_ro = "dividendele plătite"
+kind = "amount"
+source = "document"
+file = "situatii_financiare_2025_extras.pdf"
+method = "table_row"
+row_label = "Dividende plătite"
+column = "{year}"
+absolute = true      # shown in parentheses as a financing cash outflow; the text states the amount paid
+corroborate = { file = "proces_verbal_AGA_2025-04-24.txt", method = "after_text", anchor = "dividende în valoare totală de" }
+
+# ---------------------------------------------------------------------------------------
+# Checks: all run before any text is written. on_fail lists the facts that may not reach
+# the text if the check fails; block_if_not_run withholds them too when an input is missing.
+# ---------------------------------------------------------------------------------------
+
+[[check]]
+id = "EOF_TIERS"
+what = "tier 1 + tier 2 + tier 3 = total eligible own funds"
+terms = ["+eof_t1", "+eof_t2", "+eof_t3"]
+equals = "eof_total"
+block_if_not_run = true
+on_fail = ["eof_t1", "eof_t2", "eof_t3", "eof_total"]
+
+[[check]]
+id = "SCR_BASIC"
+what = "underwriting + market + counterparty - diversification = basic SCR"
+terms = ["+scr_underwriting", "+scr_market", "+scr_counterparty", "-scr_diversification"]
+equals = "scr_basic"
+on_fail = ["scr_underwriting", "scr_market", "scr_counterparty", "scr_diversification", "scr_basic"]
+
+[[check]]
+id = "SCR_TOTAL"
+what = "basic SCR + operational risk = SCR (SCR_module)"
+terms = ["+scr_basic", "+scr_operational"]
+equals = "scr_module_total"
+on_fail = ["scr_basic", "scr_operational", "scr_module_total"]
+
+[[check]]
+id = "SCR_CROSS"
+what = "SCR on sheet Capital = SCR on sheet SCR_module"
+terms = ["+scr_module_total"]
+equals = "scr"
+block_if_not_run = true
+on_fail = ["scr"]
+
+[[check]]
+id = "MCR_LT_SCR"
+what = "MCR is below the SCR"
+less = "mcr"
+than = "scr"
+on_fail = ["mcr"]
+
+# ---------------------------------------------------------------------------------------
+# Human decisions. Each is pinned to the exact evidence it was taken on: if the values
+# differ on another run, the decision does not apply and the conflict is reported again.
+# ---------------------------------------------------------------------------------------
+
+[[decision]]
+id = "DEC-1"
+fact = "solvency_ratio"
+choose = "computed"
+when_workbook_value = "1.874"
+when_computed = "197,4 %"
+source = "registru_2025.xlsx Capital!C12 = 1.874 (typed constant) vs Capital!C8 / Capital!C10 = 293.699,3 / 148.763,2 mii lei"
+reason = """C12 equals the 2024 ratio exactly (registru_2024.xlsx Capital!C11 = 1.874, published as 187,4 % in raport_2024 E.2) \
+and is a constant, not a formula. C8 reconciles with the tier rows and C10 with SCR_module. The ratio is defined as \
+eligible own funds / SCR (assessment README §2). C12 is therefore a stale carry-over and the computed ratio is used."""
+decided_by = "preparer; to be confirmed by the CFO and the actuarial function before filing"
+date = "2026-10-25"
+
+# ---------------------------------------------------------------------------------------
+# Narrative claims. A claim may appear in the text only if its quote is found verbatim in
+# the cited company document AND every condition holds on this run's data.
+# ---------------------------------------------------------------------------------------
+
+[[claim]]
+id = "CLM-scr-cause"
+file = "nota_functia_actuariala_2026-02-02.docx"
+quote = "Cerința de capital de solvabilitate a scăzut la 31 decembrie 2025 față de anul anterior, în principal ca urmare a scăderii riscului de piață."
+conditions = [ ["scr", "<", "scr@prior"], ["scr_market", "<", "scr_market@prior"] ]
+
+[[claim]]
+id = "CLM-equity-sale"
+file = "nota_functia_actuariala_2026-02-02.docx"
+quote = "În trimestrul al treilea, Societatea a vândut integral portofoliul de acțiuni listate"
+conditions = []
+
+[[claim]]
+id = "CLM-standard-formula"
+file = "nota_functia_actuariala_2026-02-02.docx"
+quote = "Calculele folosesc formula standard. Societatea nu utilizează parametri specifici proprii."
+conditions = []
+
+[[claim]]
+id = "CLM-dividend-approval"
+file = "proces_verbal_AGA_2025-04-24.txt"
+quote = "aprobă, cu unanimitatea voturilor exprimate, distribuirea de dividende în valoare totală de 15.000.000 lei din profitul net al exercițiului financiar 2024"
+conditions = []
+
+[[claim]]
+id = "CLM-own-funds-framework"
+file = "raport_2024.txt"
+quote = "Fondurile proprii sunt clasificate conform Regulamentului delegat (UE) 2015/35 și Legii nr. 237/2015 privind autorizarea și supravegherea activității de asigurare și reasigurare, aplicabile Societății începând cu 1 ianuarie 2016."
+conditions = []
+review = "Static regulatory statement carried from the 2024 report; compliance to confirm it still applies."
+
+# ---------------------------------------------------------------------------------------
+# Requests received and declined. Printed in the review report so the refusal is visible.
+# ---------------------------------------------------------------------------------------
+
+[[refused_request]]
+source = "email_director_financiar.txt, point 2"
+request = "Fill any missing figure with last year's value."
+reason = "Brief rule 1: last year's figure is never used in place of this year's. Missing figures become visible gaps."
+
+[[refused_request]]
+source = "email_director_financiar.txt, point 3"
+request = "State that the solvency ratio improved thanks to the new reinsurance programme."
+reason = """Brief rule 2. The actuarial note (2 February 2026) states the programme was renewed on 1 January 2025 on the same \
+terms, with no structural change affecting the SCR. The sources contradict the explanation."""
+
+[[refused_request]]
+source = "email_director_financiar.txt, point 4"
+request = "Reuse wording from Asigurări Dunărea's report."
+reason = "Brief rule 4: never reuse another company's wording. The draft is screened for shared word sequences."
+
+# ---------------------------------------------------------------------------------------
+# The text of section E, following the 2024 structure. A sentence is a list of variants:
+# the first variant whose facts are verified, whose conditions hold and whose claims are
+# supported is used. If none is usable the sentence becomes [de completat: reason].
+# Placeholders: {fact}, {fact@prior}, {date}, {prior_date}, {year}, {prior_year}.
+# Conditions compare UNROUNDED values: [left, op, right] with op in < > == <= >=;
+# right may be a fact or a quoted number.
+# ---------------------------------------------------------------------------------------
+
+[[sentence]]
+heading = "E. GESTIONAREA CAPITALULUI"
+
+[[sentence]]
+heading = "E.1 Fonduri proprii"
+[[sentence.variant]]
+text = "La {date}, fondurile proprii eligibile pentru acoperirea cerinței de capital de solvabilitate (SCR) au fost de {eof_total}, din care fonduri proprii de nivel 1 de {eof_t1} și fonduri proprii de nivel 2 de {eof_t2}."
+
+[[sentence]]
+[[sentence.variant]]
+when = [ ["eof_t3", "==", "0"] ]
+text = "Societatea nu a deținut fonduri proprii de nivel 3."
+[[sentence.variant]]
+when = [ ["eof_t3", ">", "0"] ]
+text = "Fondurile proprii de nivel 3 au fost de {eof_t3}."
+
+[[sentence]]
+new_paragraph = true
+[[sentence.variant]]
+claims = ["CLM-own-funds-framework"]
+text = "Fondurile proprii sunt clasificate conform Regulamentului delegat (UE) 2015/35 și Legii nr. 237/2015 privind autorizarea și supravegherea activității de asigurare și reasigurare, aplicabile Societății începând cu 1 ianuarie 2016."
+
+[[sentence]]
+new_paragraph = true
+[[sentence.variant]]
+claims = ["CLM-dividend-approval"]
+text = "În cursul anului {year}, Societatea a plătit dividende de {dividends_paid}, din profitul exercițiului financiar {prior_year}, a căror distribuire a fost aprobată de Adunarea Generală Ordinară a Acționarilor din 24 aprilie {year}."
+[[sentence.variant]]
+text = "În cursul anului {year}, Societatea a plătit dividende de {dividends_paid}."
+
+[[sentence]]
+heading = "E.2 Cerința de capital de solvabilitate și cerința de capital minim"
+[[sentence.variant]]
+when = [ ["scr", "<", "scr@prior"] ]
+claims = ["CLM-scr-cause", "CLM-equity-sale"]
+text = "La {date}, SCR a fost de {scr}, în scădere față de {scr@prior} la {prior_date}, în principal ca urmare a scăderii riscului de piață, după ce Societatea a vândut integral, în trimestrul al treilea, portofoliul de acțiuni listate."
+[[sentence.variant]]
+when = [ ["scr", "<", "scr@prior"] ]
+text = "La {date}, SCR a fost de {scr}, în scădere față de {scr@prior} la {prior_date}."
+[[sentence.variant]]
+when = [ ["scr", ">", "scr@prior"] ]
+text = "La {date}, SCR a fost de {scr}, în creștere față de {scr@prior} la {prior_date}."
+[[sentence.variant]]
+when = [ ["scr", "==", "scr@prior"] ]
+text = "La {date}, SCR a fost de {scr}, la același nivel ca la {prior_date}."
+
+[[sentence]]
+[[sentence.variant]]
+text = "Rata de solvabilitate a fost de {solvency_ratio}."
+
+[[sentence]]
+new_paragraph = true
+[[sentence.variant]]
+# Coverage is claimed only when tier 1 alone covers the MCR: the sources give no
+# MCR-eligible own funds, and tier 1 counts in full towards the MCR.
+when = [ ["eof_t1", ">=", "mcr"] ]
+text = "Cerința de capital minim (MCR) a fost de {mcr} și a fost acoperită integral."
+[[sentence.variant]]
+text = "Cerința de capital minim (MCR) a fost de {mcr}."
+
+[[sentence]]
+new_paragraph = true
+[[sentence.variant]]
+claims = ["CLM-standard-formula"]
+text = "Societatea calculează SCR folosind formula standard și nu utilizează parametri specifici proprii."
